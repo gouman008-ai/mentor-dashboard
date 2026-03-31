@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mentor Dashboard</title>
+</head>
+<body>
+    <h2>Student Performance System</h2>
+
+    <input id="reg" placeholder="RegNo"><br><br>
+    <input id="name" placeholder="Name"><br><br>
+    <input id="cat1" type="number" placeholder="CAT1"><br><br>
+    <input id="cat2" type="number" placeholder="CAT2"><br><br>
+    <input id="fat" type="number" placeholder="FAT"><br><br>
+
+    <button onclick="addStudent()">Add Student</button>
+
+    <h3>Records:</h3>
+    <pre id="output"></pre>
+
+<script>
+let students = [];
+
+function computeGrade(avg) {
+    if (avg >= 90) return "A";
+    else if (avg >= 75) return "B";
+    else if (avg >= 50) return "C";
+    else return "Fail";
+}
+
+function addStudent() {
+    let reg = document.getElementById("reg").value;
+    let name = document.getElementById("name").value;
+    let cat1 = Number(document.getElementById("cat1").value);
+    let cat2 = Number(document.getElementById("cat2").value);
+    let fat = Number(document.getElementById("fat").value);
+
+    if (cat1 < 0 || cat2 < 0 || fat < 0 || cat1 > 100 || cat2 > 100 || fat > 100) {
+        alert("Marks must be 0–100");
+        return;
+    }
+
+    let total = cat1 + cat2 + fat;
+    let avg = total / 3;
+    let grade = computeGrade(avg);
+
+    students.push({ reg, name, cat1, cat2, fat, total, avg, grade });
+
+    display();
+}
+
+function display() {
+    let text = "";
+    students.forEach(s => {
+        text += `${s.reg} | ${s.name} | Total: ${s.total} | Avg: ${s.avg.toFixed(2)} | Grade: ${s.grade}\n`;
+    });
+    document.getElementById("output").innerText = text;
+}
+</script>
+</body>
+</html>
