@@ -28,235 +28,188 @@ body {
     overflow-x: hidden;
 }
 
-.container {
-    max-width: 800px;
-    margin: 60px auto;
-    padding: 25px;
-    background: var(--card);
-    border-radius: 20px;
-    backdrop-filter: blur(15px);
-    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
-    animation: fadeIn 1s ease;
-}
-
-@keyframes fadeIn {
-    from {opacity: 0; transform: translateY(20px);} 
-    to {opacity: 1; transform: translateY(0);} 
-}
-
-h2 {
-    text-align: center;
-}
-
-input {
-    width: 100%;
-    padding: 12px;
-    margin: 10px 0;
-    border-radius: 12px;
-    border: none;
-    outline: none;
-    font-size: 14px;
-}
-
-button {
-    width: 100%;
-    padding: 14px;
-    border: none;
-    border-radius: 14px;
-    background: var(--accent);
-    color: white;
-    font-weight: bold;
-    cursor: pointer;
-    margin-top: 10px;
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-
-button:hover {
-    transform: translateY(-2px) scale(1.02);
-    box-shadow: 0 5px 20px rgba(56,189,248,0.5);
-}
-
-#output {
-    margin-top: 20px;
-    white-space: pre-wrap;
-}
-
-.toggle {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    font-size: 20px;
-    cursor: pointer;
-}
-
-footer {
-    text-align: center;
-    margin-top: 20px;
-    font-size: 14px;
-    opacity: 0.7;
-}
-
-canvas {
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: -1;
-}
-
-
-/* Animated gradient background */
+/* animated background */
 body::before {
     content: "";
     position: fixed;
-    top: 0;
-    left: 0;
     width: 200%;
     height: 200%;
-    background: radial-gradient(circle at 20% 20%, rgba(56,189,248,0.2), transparent 40%),
-                radial-gradient(circle at 80% 30%, rgba(255,255,255,0.15), transparent 40%),
-                radial-gradient(circle at 50% 80%, rgba(59,130,246,0.2), transparent 40%);
+    background: radial-gradient(circle, rgba(56,189,248,0.2), transparent 40%);
     animation: moveBg 20s linear infinite;
     z-index: -2;
 }
 
 @keyframes moveBg {
-    0% { transform: translate(0,0); }
-    50% { transform: translate(-10%, -10%); }
-    100% { transform: translate(0,0); }
+    0% { transform: translate(0,0);} 
+    50% { transform: translate(-10%,-10%);} 
+    100% { transform: translate(0,0);} 
 }
 
-/* Soft glowing snow blur layer */
-body::after {
-    content: "";
-    position: fixed;
-    top: 0;
-    left: 0;
+.container {
+    max-width: 900px;
+    margin: 60px auto;
+    padding: 25px;
+    background: var(--card);
+    border-radius: 20px;
+    backdrop-filter: blur(15px);
+}
+
+input, button {
     width: 100%;
-    height: 100%;
-    backdrop-filter: blur(2px);
-    z-index: -1;
+    padding: 12px;
+    margin: 8px 0;
+    border-radius: 10px;
+    border: none;
 }
 
+button {
+    background: var(--accent);
+    color: white;
+    cursor: pointer;
+}
+
+button:hover { opacity: 0.8; }
+
+.row { display: flex; gap: 10px; }
+.row button { flex: 1; }
+
+#output { white-space: pre-wrap; margin-top: 15px; }
+
+footer { text-align:center; margin-top:15px; opacity:0.7; }
+
+canvas { position: fixed; top:0; left:0; z-index:-1; }
 </style>
 </head>
 <body>
 
-<div class="toggle" onclick="toggleMode()">❄️</div>
+<div style="position:absolute;top:20px;right:20px;cursor:pointer" onclick="toggleMode()">❄️</div>
 <canvas id="snow"></canvas>
 
 <div class="container">
-    <h2>❄️ Student Performance System</h2>
+<h2>❄️ Mentor Dashboard</h2>
 
-    <input id="reg" placeholder="Register Number">
-    <input id="name" placeholder="Student Name">
-    <input id="cat1" type="number" placeholder="CAT 1">
-    <input id="cat2" type="number" placeholder="CAT 2">
-    <input id="fat" type="number" placeholder="FAT">
+<input id="reg" placeholder="Register Number">
+<input id="name" placeholder="Student Name">
+<input id="cat1" type="number" placeholder="CAT1">
+<input id="cat2" type="number" placeholder="CAT2">
+<input id="fat" type="number" placeholder="FAT">
 
-    <button onclick="addStudent()">Add Student</button>
+<button onclick="addStudent()">Add Student</button>
 
-    <h3>Records:</h3>
-    <pre id="output"></pre>
+<div class="row">
+<button onclick="searchStudent()">Search</button>
+<button onclick="updateStudent()">Update</button>
+<button onclick="deleteStudent()">Delete</button>
+</div>
 
-    <footer>Designed and Developed by Goutham ❄️</footer>
+<div class="row">
+<button onclick="showTopper()">Topper</button>
+<button onclick="showStats()">Stats</button>
+<button onclick="gradeDist()">Grades</button>
+</div>
+
+<pre id="output"></pre>
+<footer>Designed and Developed by Goutham ❄️</footer>
 </div>
 
 <script>
-let students = [];
+let students = JSON.parse(localStorage.getItem("students")||"[]");
 
-function computeGrade(avg) {
-    if (avg >= 90) return "A";
-    else if (avg >= 75) return "B";
-    else if (avg >= 50) return "C";
-    else return "Fail";
+function save(){ localStorage.setItem("students", JSON.stringify(students)); }
+
+function computeGrade(avg){
+    if(avg>=90) return "A";
+    if(avg>=75) return "B";
+    if(avg>=50) return "C";
+    return "Fail";
 }
 
-function addStudent() {
-    let reg = document.getElementById("reg").value;
-    let name = document.getElementById("name").value;
-    let cat1 = Number(document.getElementById("cat1").value);
-    let cat2 = Number(document.getElementById("cat2").value);
-    let fat = Number(document.getElementById("fat").value);
+function addStudent(){
+    let reg=regVal(), name=nameVal();
+    let cat1=num("cat1"), cat2=num("cat2"), fat=num("fat");
 
-    if (!reg || !name) {
-        alert("Enter all details");
-        return;
-    }
+    if(students.find(s=>s.reg===reg)) return alert("Duplicate RegNo!");
 
-    if (cat1 < 0 || cat2 < 0 || fat < 0 || cat1 > 100 || cat2 > 100 || fat > 100) {
-        alert("Marks must be 0–100");
-        return;
-    }
+    let total=cat1+cat2+fat;
+    let avg=total/3;
+    let grade=computeGrade(avg);
 
-    let total = cat1 + cat2 + fat;
-    let avg = total / 3;
-    let grade = computeGrade(avg);
-
-    students.push({ reg, name, total, avg, grade });
-
-    display();
+    students.push({reg,name,cat1,cat2,fat,total,avg,grade});
+    save(); display();
 }
 
-function display() {
-    let text = "";
-    students.forEach(s => {
-        text += `${s.reg} | ${s.name} | Total: ${s.total} | Avg: ${s.avg.toFixed(2)} | Grade: ${s.grade}\n`;
-    });
-    document.getElementById("output").innerText = text;
+function searchStudent(){
+    let reg=regVal();
+    let s=students.find(x=>x.reg===reg);
+    out(s? JSON.stringify(s,null,2):"Not found");
 }
 
-function toggleMode() {
-    document.body.classList.toggle("light");
+function updateStudent(){
+    let reg=regVal();
+    let s=students.find(x=>x.reg===reg);
+    if(!s) return alert("Not found");
+
+    s.cat1=num("cat1");
+    s.cat2=num("cat2");
+    s.fat=num("fat");
+    s.total=s.cat1+s.cat2+s.fat;
+    s.avg=s.total/3;
+    s.grade=computeGrade(s.avg);
+
+    save(); display();
 }
 
-// Advanced Snow Effect (snowballs + depth)
-const canvas = document.getElementById("snow");
-const ctx = canvas.getContext("2d");
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-
-let snowflakes = [];
-
-for (let i = 0; i < 150; i++) {
-    snowflakes.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        r: Math.random() * 6 + 1,
-        d: Math.random() * 2
-    });
+function deleteStudent(){
+    let reg=regVal();
+    if(!confirm("Delete?")) return;
+    students=students.filter(s=>s.reg!==reg);
+    save(); display();
 }
 
-function drawSnow() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    for (let i = 0; i < snowflakes.length; i++) {
-        let f = snowflakes[i];
-
-        ctx.beginPath();
-        ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
-        ctx.fillStyle = "rgba(255,255,255,0.8)";
-        ctx.fill();
-    }
-
-    moveSnow();
+function showTopper(){
+    let max=Math.max(...students.map(s=>s.total));
+    let top=students.filter(s=>s.total===max);
+    out("Topper(s):\n"+JSON.stringify(top,null,2));
 }
 
-let angle = 0;
-
-function moveSnow() {
-    angle += 0.01;
-    for (let i = 0; i < snowflakes.length; i++) {
-        let f = snowflakes[i];
-        f.y += f.d + 1;
-        f.x += Math.sin(angle) * 1.5;
-
-        if (f.y > canvas.height) {
-            snowflakes[i] = { x: Math.random() * canvas.width, y: 0, r: f.r, d: f.d };
-        }
-    }
+function showStats(){
+    let totals=students.map(s=>s.total);
+    let avg=totals.reduce((a,b)=>a+b,0)/totals.length||0;
+    out(`High:${Math.max(...totals)} Low:${Math.min(...totals)} Avg:${avg.toFixed(2)}`);
 }
 
-setInterval(drawSnow, 30);
+function gradeDist(){
+    let dist={A:0,B:0,C:0,Fail:0};
+    students.forEach(s=>dist[s.grade]++);
+    out(JSON.stringify(dist,null,2));
+}
+
+function display(){
+    let t="";
+    students.forEach(s=>t+=`${s.reg} | ${s.name} | ${s.total} | ${s.grade}\n`);
+    out(t);
+}
+
+function out(t){ document.getElementById("output").innerText=t; }
+function regVal(){ return document.getElementById("reg").value; }
+function nameVal(){ return document.getElementById("name").value; }
+function num(id){ return Number(document.getElementById(id).value); }
+
+function toggleMode(){ document.body.classList.toggle("light"); }
+
+// snow
+const canvas=document.getElementById("snow");
+const ctx=canvas.getContext("2d");
+canvas.width=innerWidth; canvas.height=innerHeight;
+let snow=[];
+for(let i=0;i<120;i++) snow.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight,r:Math.random()*5});
+function draw(){
+ ctx.clearRect(0,0,canvas.width,canvas.height);
+ snow.forEach(f=>{ctx.beginPath();ctx.arc(f.x,f.y,f.r,0,Math.PI*2);ctx.fillStyle="white";ctx.fill(); f.y+=1; if(f.y>innerHeight) f.y=0;});
+}
+setInterval(draw,30);
+
+display();
 </script>
 
 </body>
